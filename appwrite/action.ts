@@ -4,11 +4,11 @@ import { ID } from "appwrite";
 const db: { [key: string]: any } = {};
 
 const collections = [
-    {
-        dbId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        id: process.env.NEXT_PUBLIC_USER_COLLECTION_ID!,
-        name: "user",
-    },
+    // {
+    //     dbId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+    //     id: process.env.NEXT_PUBLIC_USER_COLLECTION_ID!,
+    //     name: "user",
+    // },
     {
         dbId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
         id: process.env.NEXT_PUBLIC_PROJECT_COLLECTION_ID!,
