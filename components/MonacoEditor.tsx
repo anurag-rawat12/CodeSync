@@ -8,7 +8,6 @@ import { usePathname } from 'next/navigation';
 import db from '@/appwrite/action';
 import * as Y from 'yjs';
 import { LiveblocksYjsProvider } from '@liveblocks/yjs';
-import { useRoom } from '@liveblocks/react/suspense';
 import { editor } from 'monaco-editor';
 import { MonacoBinding } from 'y-monaco';
 import { Awareness } from 'y-protocols/awareness';
