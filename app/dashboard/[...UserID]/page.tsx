@@ -70,7 +70,7 @@ const Page = () => {
     if (typeof window !== "undefined") {
         width = window.innerWidth;
     }
-    
+
 
     const createHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();

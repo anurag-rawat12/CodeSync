@@ -40,16 +40,11 @@ export default function Home() {
 
           <div className="flex flex-row gap-[2vw] ">
             <Link href={'/signup'} className="mt-[5vw]">
-              <Button className='bg-gray-300 group  hover:bg-[#E4E6EF] text-[20px] lg:text-[16px] leading-6 px-[1.6vw] py-[1.8vw] rounded-xl text-black'>
+              <Button className='bg-gray-300 group  hover:bg-[#E4E6EF] text-[18px] leading-6 px-[1.8vw] py-[1.8vw] rounded-xl text-black'>
                 Get Started
               </Button>
             </Link>
 
-            <Link href={'/'} className="mt-[5vw]">
-              <Button className='bg-gray-300 group  hover:bg-[#E4E6EF] text-[20px] lg:text-[16px] leading-6 px-[1.6vw] py-[1.8vw] rounded-xl text-black'>
-                Learn More
-              </Button>
-            </Link>
           </div>
         </section>
       </div>
