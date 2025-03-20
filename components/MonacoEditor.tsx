@@ -38,7 +38,7 @@ const MonacoEditor = () => {
       return;
     }
 
-    const socket = new WebSocket(`ws://localhost:8080/ws?project=${projectID}`);
+    const socket = new WebSocket(`ws://codesync-85no.onrender.com/ws?project=${projectID}`);
     socketRef.current = socket;
 
     socket.onmessage = (event) => {
@@ -53,7 +53,7 @@ const MonacoEditor = () => {
       setTimeout(() => {
         socketRef.current = null;
         if (projectID) {
-          new WebSocket(`ws://localhost:8080/ws?project=${projectID}`);
+          new WebSocket(`ws://codesync-85no.onrender.com/ws?project=${projectID}`);
         }
       }, 3000);
     };
