@@ -7,7 +7,6 @@ const wss = new WebSocketServer({ port });
 wss.on("connection", async (ws, req) => {
   const url = req?.url ? new URL(req.url, `http://${req.headers.host}`) : null;
   const projectID = url?.searchParams.get("project");
- 
 
   if (!projectID) {
     console.error("❌ Missing project ID");
@@ -24,28 +23,39 @@ wss.on("connection", async (ws, req) => {
     console.error("❌ Error fetching content:", error);
   }
 
+  // **🔥 Keep Connection Alive** (Ping every 25s)
+  const pingInterval = setInterval(() => {
+    if (ws.readyState === ws.OPEN) {
+      ws.send(JSON.stringify({ type: "ping" }));
+    }
+  }, 25000);
+
   ws.on("message", async (message) => {
-    const data = JSON.parse(message.toString());
+    try {
+      const data = JSON.parse(message.toString());
 
-    if (data.type === "update") {
-
-      try {
+      if (data.type === "update") {
         const currentDoc = await db.projects.get(projectID);
-        if (currentDoc.content === data.content) {
-          return;
-        }
+        if (currentDoc.content === data.content) return;
 
         await db.projects.update(projectID, { content: data.content });
-      } catch (error) {
-        console.error("❌ Error updating document in Appwrite:", error);
-      }
 
-      wss.clients.forEach((client) => {
-        if (client !== ws && client.readyState === ws.OPEN) {
-          client.send(JSON.stringify({ type: "update", content: data.content }));
-        }
-      });
+        // **Broadcast Update to Other Clients**
+        wss.clients.forEach((client) => {
+          if (client !== ws && client.readyState === ws.OPEN) {
+            client.send(JSON.stringify({ type: "update", content: data.content }));
+          }
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error handling message:", error);
     }
   });
+
+  ws.on("close", () => {
+    console.log("Client disconnected");
+    clearInterval(pingInterval);
+  });
 });
-console.log("connected" , port);
+
+console.log("✅ WebSocket server running on port", port);
