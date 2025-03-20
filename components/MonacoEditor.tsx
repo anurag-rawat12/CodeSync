@@ -40,7 +40,16 @@ const MonacoEditor = () => {
 
     const socket = new WebSocket(`wss://codesync-85no.onrender.com/ws?project=${projectID}`);
     socketRef.current = socket;
+socket.onopen = () => {
+  console.log('✅ Connected to WebSocket');
 
+  // **🔥 Keep Connection Alive (Send Ping Every 25s)**
+  setInterval(() => {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, 25000);
+};
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "update" && data.content !== modifiedContent) {
