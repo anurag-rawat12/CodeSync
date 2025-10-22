@@ -6,7 +6,7 @@ import * as monaco from "monaco-editor";
 import { Button } from "./ui/button";
 import { Code2, Terminal } from "lucide-react";
 import { usePathname } from "next/navigation";
-import db from "@/appwrite/action";
+import { dbAction } from "@/appwrite/action"; // use server-safe function
 import Collaboration from "./Collaboration";
 
 const MonacoEditor = () => {
@@ -22,9 +22,9 @@ const MonacoEditor = () => {
   const socketRef = useRef<WebSocket | null>(null);
 
   /** 🔹 Debounce Function */
-  const debounce = useCallback((func: (...args: []) => void, delay: number) => {
+  const debounce = useCallback((func: (...args: any[]) => void, delay: number) => {
     let timer: NodeJS.Timeout;
-    return (...args: []) => {
+    return (...args: any[]) => {
       clearTimeout(timer);
       timer = setTimeout(() => func(...args), delay);
     };
@@ -32,24 +32,20 @@ const MonacoEditor = () => {
 
   /** 🔹 Initialize WebSocket */
   useEffect(() => {
-    if (!projectID) return;
-
-    if (socketRef.current) {
-      return;
-    }
+    if (!projectID || socketRef.current) return;
 
     const socket = new WebSocket(`wss://codesync-85no.onrender.com/ws?project=${projectID}`);
     socketRef.current = socket;
-socket.onopen = () => {
-  console.log('✅ Connected to WebSocket');
 
-  // **🔥 Keep Connection Alive (Send Ping Every 25s)**
-  setInterval(() => {
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: 'ping' }));
-    }
-  }, 25000);
-};
+    socket.onopen = () => {
+      console.log("✅ Connected to WebSocket");
+      setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: "ping" }));
+        }
+      }, 25000);
+    };
+
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "update" && data.content !== modifiedContent) {
@@ -71,8 +67,7 @@ socket.onopen = () => {
       socket.close();
       socketRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectID]);
+  }, [projectID, modifiedContent]);
 
   /** 🔹 Fetch Initial Content from Appwrite */
   useEffect(() => {
@@ -80,10 +75,10 @@ socket.onopen = () => {
       if (!projectID) return;
 
       try {
-        const res = await db.projects.get(projectID);
+        const res = await dbAction("get", undefined, projectID); // use dbAction
         if (res) {
           setLanguage(res.language);
-          setModifiedContent(res.content);
+          setModifiedContent(res.content || "");
         }
       } catch (error) {
         console.error("❌ Error fetching project:", error);
@@ -93,18 +88,15 @@ socket.onopen = () => {
     fetchData();
   }, [projectID]);
 
-  /** 🔹 Save Content with Debounce */
+  /** 🔹 Save Content with Debounce via WebSocket */
   const saveContent = useCallback(
     (content: string) => {
       debounce(() => {
         if (!socketRef.current) return;
-        socketRef.current.send(
-          JSON.stringify({ type: "update", projectID, content })
-        );
+        socketRef.current.send(JSON.stringify({ type: "update", projectID, content }));
       }, 1500)();
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [projectID]
+    [projectID, debounce]
   );
 
   /** 🔹 Sync Changes with WebSocket */
@@ -137,7 +129,7 @@ socket.onopen = () => {
     if (!language || !modifiedContent) return;
     try {
       setIsLoading(true);
-      fetchVersion();
+      await fetchVersion();
       const response = await fetch("https://emkc.org/api/v2/piston/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,7 +149,6 @@ socket.onopen = () => {
     }
   };
 
-
   /** 🔹 Store Editor Instance */
   const handleOnMount: OnMount = (editor) => {
     editorRef.current = editor;
@@ -174,23 +165,33 @@ socket.onopen = () => {
         <Collaboration />
         <div className="lg:w-[75vw] lg:h-[90vh] rounded-xl bg-[#131313] flex flex-col">
           <div className="flex">
-            <div className={`cursor-pointer flex rounded-tl-xl flex-row items-center justify-center gap-[10px] px-[1vw] py-[0.5vw] ${toggle === "editor" ? "bg-[#1E1E1E] text-white" : "text-gray-300"}`} onClick={() => setToggle("editor")}>
+            <div
+              className={`cursor-pointer flex rounded-tl-xl flex-row items-center justify-center gap-[10px] px-[1vw] py-[0.5vw] ${
+                toggle === "editor" ? "bg-[#1E1E1E] text-white" : "text-gray-300"
+              }`}
+              onClick={() => setToggle("editor")}
+            >
               <Code2 size={20} />
               Code
             </div>
-            <div className={`cursor-pointer flex flex-row items-center justify-center gap-[10px] px-[1vw] py-[0.5vw] ${toggle === "console" ? "bg-[#1E1E1E] text-white" : "text-gray-300"}`} onClick={() => setToggle("console")}>
+            <div
+              className={`cursor-pointer flex flex-row items-center justify-center gap-[10px] px-[1vw] py-[0.5vw] ${
+                toggle === "console" ? "bg-[#1E1E1E] text-white" : "text-gray-300"
+              }`}
+              onClick={() => setToggle("console")}
+            >
               <Terminal size={20} />
               Console
             </div>
           </div>
-          <div className='lg:h-[85vh] h-[60vh]'>
-            <div className={`${toggle === 'editor' ? 'block' : 'hidden'} h-full overflow-y-auto`}>
+          <div className="lg:h-[85vh] h-[60vh]">
+            <div className={`${toggle === "editor" ? "block" : "hidden"} h-full overflow-y-auto`}>
               <Editor
                 onMount={handleOnMount}
-                height='100%'
-                theme='vs-dark'
+                height="100%"
+                theme="vs-dark"
                 value={modifiedContent}
-                language={language === 'c++' ? 'cpp' : language}
+                language={language === "c++" ? "cpp" : language}
                 onChange={handleEditorChange}
                 options={{
                   tabSize: 2,
@@ -200,10 +201,11 @@ socket.onopen = () => {
               />
             </div>
             <div
-              className={`console bg-[#1E1E1E] text-white px-[2vw] py-[1vw] h-full overflow-y-auto ${toggle === 'console' ? 'block' : 'hidden'
-                }`}
+              className={`console bg-[#1E1E1E] text-white px-[2vw] py-[1vw] h-full overflow-y-auto ${
+                toggle === "console" ? "block" : "hidden"
+              }`}
             >
-              <p className='text-red-400'>{ans?.stderr}</p>
+              <p className="text-red-400">{ans?.stderr}</p>
               <p>{ans?.stdout}</p>
             </div>
           </div>

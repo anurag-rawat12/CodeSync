@@ -27,7 +27,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import db from '@/appwrite/action';
+import {dbAction} from '@/appwrite/action';
 import { ID } from 'appwrite';
 import { usePathname, useRouter } from 'next/navigation';
 import { Deletebtn } from '@/components/Deletebtn';
@@ -47,10 +47,10 @@ const Page = () => {
     const init = useCallback(async () => {
         try {
 
-            const response = await db.projects.list();
-            const filteredDocuments = response.documents.filter((doc: Project) => {
+            const response = await dbAction("list") as { documents: Project[] };
+            const filteredDocuments = response.documents?.filter((doc: Project) => {
                 return doc.ownerID === userID || (doc.collaborator_email && doc.collaborator_email.includes(useremail!));
-            });
+            }) || [];
             setUserProject(filteredDocuments);
         } catch (error) {
             console.error("Error fetching projects:", error);
@@ -75,7 +75,8 @@ const Page = () => {
     const createHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setModal(false);
-        const project_name = (e.currentTarget.elements.namedItem('name') as HTMLInputElement).value;
+
+        const project_name = (e.currentTarget.elements.namedItem("name") as HTMLInputElement).value;
 
         try {
             const payload = {
@@ -85,16 +86,18 @@ const Page = () => {
                 ownerID: userID!,
                 created_at: new Date().toISOString(),
             };
-            const response = await db.projects.create(payload);
+
+            const response = await dbAction("create", payload) as Project;
             setUserProject([...userproject, response]);
         } catch (err) {
             console.error("Error creating project:", err);
         }
     };
 
+    // Delete project
     const deleteHandler = async (projectId: string) => {
         try {
-            await db.projects.delete(projectId);
+            await dbAction("delete", undefined, projectId);
             setUserProject(userproject.filter((project) => project.$id !== projectId));
         } catch (err) {
             console.error("Error deleting project:", err);
