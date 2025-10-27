@@ -1,6 +1,7 @@
 
 import { ID } from "appwrite";
 import { getAppwriteClient } from "./config";
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 
 export async function dbAction(action: "create" | "update" | "delete" | "list" | "get", payload?: any, id?: string) {
 

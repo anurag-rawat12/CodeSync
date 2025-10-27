@@ -4,49 +4,43 @@ import React, { useEffect, useRef, useState } from 'react';
 import MonacoEditor, { OnMount } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import ACTIONS from '@/lib/action';
-import { dbAction } from '@/appwrite/action';
 
-const ProjectEditor = ({
+const EditorPage = ({
   onCodeChange,
   roomID,
   socketRef,
-  ClientList
 }: {
   onCodeChange: (code: string) => void;
   roomID: string;
   socketRef: any;
-  ClientList: any;
 }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [language, setLanguage] = useState('');
+  const [language, setLanguage] = useState('javascript');
   const [isRemoteChange, setIsRemoteChange] = useState(false);
   const [version, setVersion] = useState<string>('latest');
   const [output, setOutput] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+
   const [consoleHeight, setConsoleHeight] = useState(200);
   const [isDragging, setIsDragging] = useState(false);
-  const [Content, setContent] = useState<string>("");
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
   };
 
-  /** Fetch project data */
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!roomID) return;
-      try {
-        const res = (await dbAction("get", undefined, roomID)) as { language?: string; content?: string } | null;
-        if (res) {
-          setLanguage(res.language ?? "");
-          setContent(res.content ?? "");
-        }
-      } catch (err) { console.error(err); }
-    };
-    fetchData();
-  }, [roomID]);
+  const languages = [
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'TypeScript', value: 'typescript' },
+    { label: 'Python', value: 'python' },
+    { label: 'C++', value: 'c++' },
+    { label: 'Java', value: 'java' },
+  ];
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLanguage(e.target.value);    
+  };
 
   // 🧩 Fetch runtime version
   const fetchVersion = async () => {
@@ -56,7 +50,7 @@ const ProjectEditor = ({
       console.log(language)
       const runtime = runtimes.find((r: any) => r.language === language);
       setVersion(runtime ? runtime.version : 'latest');
-      console.log("version", runtimes);
+      console.log("version" , runtimes );
     } catch {
       setVersion('unknown');
     }
@@ -82,7 +76,7 @@ const ProjectEditor = ({
       });
 
       const result = await res.json();
-      console.log("version", result);
+      console.log("version" , result );
       setOutput(result.run?.output || 'No output');
     } catch (err) {
       console.error(err);
@@ -117,6 +111,7 @@ const ProjectEditor = ({
       const currentValue = editorRef.current.getValue();
       if (currentValue === code) return;
 
+      console.log('Applying remote code change',currentValue);
       setIsRemoteChange(true);
       editorRef.current.setValue(code);
       setIsRemoteChange(false);
@@ -136,17 +131,10 @@ const ProjectEditor = ({
       const currentCode = editorRef.current.getValue();
       socket.emit(ACTIONS.SYNC_CODE, { socketID, code: currentCode });
     };
-    console.log("ClientList", ClientList);
-    console.log("content", Content);
-    if(ClientList.length === 1 && Content){
-      // First user to join, set the editor content
-      if (editorRef.current) {
-        editorRef.current.setValue(Content);
-      }
-    }
+
     socket.on(ACTIONS.SYNC_CODE, handleSyncCode);
     return () => socket.off(ACTIONS.SYNC_CODE, handleSyncCode);
-  }, [socketRef.current, Content]);
+  }, [socketRef.current]);
 
   // 🔹 Console resize
   const startDrag = (e: React.MouseEvent) => {
@@ -179,17 +167,24 @@ const ProjectEditor = ({
     >
       {/* 🔹 Top Toolbar */}
       <div className="flex justify-between items-center px-4 py-2 bg-[#111111] border-b border-white/10 z-20">
+        <select
+          value={language}
+          onChange={handleLanguageChange}
+          className="bg-[#1B1B1B] border border-white/20 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-[#6366F1] transition-all"
+        >
+          {languages.map((lang) => (
+            <option key={lang.value} value={lang.value}>
+              {lang.label}
+            </option>
+          ))}
+        </select>
 
-        <div>
-          {
-            language
-          }
-        </div>
         <button
           onClick={runCode}
           disabled={isLoading}
-          className={`${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90'
-            } bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] text-white px-4 py-1.5 rounded-lg text-sm transition-all`}
+          className={`${
+            isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90'
+          } bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] text-white px-4 py-1.5 rounded-lg text-sm transition-all`}
         >
           {isLoading ? 'Running...' : '▶ Run'}
         </button>
@@ -201,7 +196,7 @@ const ProjectEditor = ({
           height={`calc(100% - ${consoleHeight}px)`}
           width="100%"
           defaultLanguage="javascript"
-          language={language == 'c++' ? 'cpp' : language}
+          language={language  == 'c++' ? 'cpp' : language}
           theme="vs-dark"
           onMount={handleEditorDidMount}
           options={{
@@ -232,4 +227,4 @@ const ProjectEditor = ({
   );
 };
 
-export default ProjectEditor;
+export default EditorPage;

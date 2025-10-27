@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
     ];
   },
   /* other config options here */
+  reactStrictMode: false,
 };
 
 export default nextConfig;

@@ -1,6 +1,6 @@
 
 import { Client, Databases } from "node-appwrite";
-import { getAppwriteEnv } from "./env.server.ts";
+import { getAppwriteEnv } from "./env.server";
 
 export async function getAppwriteClient() {
   const {

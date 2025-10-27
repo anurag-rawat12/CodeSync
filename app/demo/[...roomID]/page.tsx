@@ -1,40 +1,36 @@
 'use client';
 
+import EditorPage from '@/components/Editor';
 import React, { useEffect, useRef, useState } from 'react';
 import Client from '@/components/client';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { initSocket } from '@/app/socket';
 import { Socket } from 'socket.io-client';
 import ACTIONS from '@/lib/action';
-import { useUser } from '@clerk/nextjs';
-import ProjectEditor from '@/components/MonacoEditor';
 
 interface ClientType {
   socketID: string;
   username: string;
 }
 
-const ProjectPage = () => {
+const RoomPage = () => {
 
   const socketRef = useRef<Socket | null>(null);
 
   const params = useParams();
-  const { user } = useUser();
-  const name = user?.fullName
-  const userID = user?.id;
+  const searchParams = useSearchParams();
+  const name = searchParams.get("name");
 
-  const roomID = params.projectID as string;
+  const roomID = params.roomID as string;
   const router = useRouter();
   const [ClientList, setClientList] = useState<ClientType[]>([]);
   const codeRef = useRef<string>(null)
 
   useEffect(() => {
-    if (!name) return;
     if (socketRef.current) return;
-
     const init = async () => {
       socketRef.current = await initSocket();
 
@@ -50,11 +46,11 @@ const ProjectPage = () => {
         router.push('/');
       });
 
-      // ✅ Use correct name now
       socketRef.current.emit(ACTIONS.JOIN, {
         roomID,
         username: name,
       });
+
 
       socketRef.current.on(ACTIONS.JOINED, ({ clients, username, socketID }) => {
         if (username !== name) {
@@ -83,13 +79,24 @@ const ProjectPage = () => {
         socketRef.current.off(ACTIONS.JOINED);
         socketRef.current.off(ACTIONS.DISCONNECTED);
       }
-    };
-  }, [name, roomID]);
+    }
 
+  }, []);
+
+
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(roomID);
+      toast.success('Room ID copied!');
+    } catch {
+      toast.error('Failed to copy Room ID');
+    }
+  };
 
   const handleLeave = () => {
     toast('You have left the room.');
-    router.push(`/dashboard/${userID}`)
+    router.push('/demo')
   };
 
   return (
@@ -124,6 +131,12 @@ const ProjectPage = () => {
 
         {/* Actions */}
         <div className="flex flex-col gap-3 mt-8">
+          <Button
+            onClick={handleCopy}
+            className="w-full bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] hover:opacity-90 text-white text-[15px] py-2.5 rounded-lg transition-all"
+          >
+            Copy Room ID
+          </Button>
 
           <Button
             onClick={handleLeave}
@@ -136,19 +149,14 @@ const ProjectPage = () => {
 
       {/* Main Editor */}
       <main className="bg-[#0B0B0B] overflow-hidden">
-        <ProjectEditor
+        <EditorPage
           onCodeChange={(code) => {
             codeRef.current = code
-          }}
-          roomID={roomID}
-          socketRef={socketRef}
-          ClientList={ClientList}
-          // language={language}
-        />
-
+          }} roomID={roomID} socketRef={socketRef} />
+          
       </main>
     </div>
   );
 };
 
-export default ProjectPage;
+export default RoomPage;
