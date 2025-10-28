@@ -24,7 +24,7 @@ export function Deletebtn({ projectId, onclick }: DeletebtnProps) {
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="outline" className="text-red-600">
+                <Button variant="default" className="text-red-600 bg-gray-300 hover:bg-gray-200">
                     <Trash2 className="text-red-600" /> Delete
                 </Button>
             </AlertDialogTrigger>

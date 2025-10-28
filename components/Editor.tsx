@@ -5,6 +5,7 @@ import MonacoEditor, { OnMount } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import ACTIONS from '@/lib/action';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const EditorPage = ({
   onCodeChange,
   roomID,
@@ -31,18 +32,23 @@ const EditorPage = ({
   };
 
   const languages = [
-    { label: 'JavaScript', value: 'javascript' },
-    { label: 'TypeScript', value: 'typescript' },
-    { label: 'Python', value: 'python' },
-    { label: 'C++', value: 'c++' },
-    { label: 'Java', value: 'java' },
+    "javascript",
+    "python",
+    "java",
+    "c",
+    "c++",
+    "csharp",
+    "typescript",
+    "go",
+    "rust",
+    "php"
   ];
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);    
   };
 
-  // 🧩 Fetch runtime version
+  // Fetch runtime version
   const fetchVersion = async () => {
     try {
       const res = await fetch('https://emkc.org/api/v2/piston/runtimes');
@@ -56,7 +62,7 @@ const EditorPage = ({
     }
   };
 
-  // 🧩 Run Code
+  // Run Code
   const runCode = async () => {
     if (!editorRef.current) return;
     const code = editorRef.current.getValue();
@@ -86,7 +92,7 @@ const EditorPage = ({
     }
   };
 
-  // 🔹 Local code change → emit
+  // Local code change → emit
   useEffect(() => {
     if (!editorRef.current || !socketRef.current) return;
     const editor = editorRef.current;
@@ -101,7 +107,7 @@ const EditorPage = ({
     return () => sub.dispose();
   }, [socketRef.current, isRemoteChange]);
 
-  // 🔹 Remote code update listener
+  // Remote code update listener
   useEffect(() => {
     if (!socketRef.current) return;
     const socket = socketRef.current;
@@ -121,7 +127,7 @@ const EditorPage = ({
     return () => socket.off(ACTIONS.CODE_CHANGE, handleCodeChange);
   }, [socketRef.current]);
 
-  // 🔹 SYNC_CODE handler
+  // SYNC_CODE handler
   useEffect(() => {
     if (!socketRef.current) return;
     const socket = socketRef.current;
@@ -136,7 +142,7 @@ const EditorPage = ({
     return () => socket.off(ACTIONS.SYNC_CODE, handleSyncCode);
   }, [socketRef.current]);
 
-  // 🔹 Console resize
+
   const startDrag = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -165,7 +171,7 @@ const EditorPage = ({
       ref={containerRef}
       className="flex flex-col w-[80vw] h-[100vh] bg-[#0B0B0B] text-white relative"
     >
-      {/* 🔹 Top Toolbar */}
+      
       <div className="flex justify-between items-center px-4 py-2 bg-[#111111] border-b border-white/10 z-20">
         <select
           value={language}
@@ -173,8 +179,8 @@ const EditorPage = ({
           className="bg-[#1B1B1B] border border-white/20 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-[#6366F1] transition-all"
         >
           {languages.map((lang) => (
-            <option key={lang.value} value={lang.value}>
-              {lang.label}
+            <option key={lang} value={lang}>
+              {lang}
             </option>
           ))}
         </select>
@@ -190,7 +196,7 @@ const EditorPage = ({
         </button>
       </div>
 
-      {/* 🔹 Editor + Console */}
+     
       <div className="relative flex-grow overflow-hidden">
         <MonacoEditor
           height={`calc(100% - ${consoleHeight}px)`}
@@ -206,14 +212,14 @@ const EditorPage = ({
           }}
         />
 
-        {/* Divider */}
+        
         <div
           onMouseDown={startDrag}
           className="h-2 cursor-row-resize bg-[#222] hover:bg-[#333] transition-colors absolute left-0 right-0"
           style={{ bottom: `${consoleHeight}px`, zIndex: 10 }}
         ></div>
 
-        {/* Output Console */}
+        
         <div
           style={{ height: `${consoleHeight}px` }}
           className="absolute bottom-0 left-0 right-0 bg-[#1B1B1B] border-t border-white/10 overflow-y-auto z-10"

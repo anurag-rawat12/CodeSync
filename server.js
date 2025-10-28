@@ -41,21 +41,21 @@ io.on("connection", (socket) => {
       });
     });
 
-    // 🔹 Ask existing users (except the new one) to sync code with the new user
+    // Ask existing users (except the new one) to sync code with the new user
     socket.in(roomID).emit(ACTIONS.SYNC_CODE, { socketID: socket.id });
   });
 
-  // 🔹 Code change broadcast
+  // Code change broadcast
   socket.on(ACTIONS.CODE_CHANGE, ({ roomID, code }) => {
     socket.in(roomID).emit(ACTIONS.CODE_CHANGE, { code });
   });
 
-  // 🔹 Handle direct sync from one client to another
+  // Handle direct sync from one client to another
   socket.on(ACTIONS.SYNC_CODE, ({ socketID, code }) => {
     io.to(socketID).emit(ACTIONS.CODE_CHANGE, { code });
   });
 
-  // 🔹 Handle disconnects
+  // Handle disconnects
   socket.on(ACTIONS.DISCONNECTING, async () => {
     const rooms = [...socket.rooms];
 

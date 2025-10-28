@@ -7,10 +7,10 @@ import { dbAction } from "@/appwrite/action"; // server-safe
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
-// Define the structure of a project document
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type ProjectType = {
   collaborator_email?: string[];
-  [key: string]: any; // allow other properties like language, ownerID, content
+  [key: string]: any;
 };
 
 const Collaboration: React.FC = () => {
@@ -23,14 +23,14 @@ const Collaboration: React.FC = () => {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  /** 🔹 Set logged-in user email */
+  /** Set logged-in user email */
   useEffect(() => {
     if (user) {
       setUserEmail(user.primaryEmailAddress?.emailAddress ?? null);
     }
   }, [user]);
 
-  /** 🔹 Fetch collaborators */
+  /**Fetch collaborators */
   const fetchCollaborators = async () => {
     if (!projectID) return;
     try {
@@ -45,7 +45,7 @@ const Collaboration: React.FC = () => {
     fetchCollaborators();
   }, [projectID, loadingAction]);
 
-  /** 🔹 Add collaborator */
+  /**Add collaborator */
   const addCollaborator = async () => {
     if (!projectID || !email) return;
     try {
@@ -64,7 +64,7 @@ const Collaboration: React.FC = () => {
     }
   };
 
-  /** 🔹 Remove collaborator */
+  /**Remove collaborator */
   const removeCollaborator = async (removeEmail: string) => {
     if (!projectID) return;
     try {

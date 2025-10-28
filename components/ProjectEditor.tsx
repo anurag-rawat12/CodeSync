@@ -5,7 +5,11 @@ import MonacoEditor, { OnMount } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import ACTIONS from '@/lib/action';
 import { dbAction } from '@/appwrite/action';
+import { useHotkeys } from "react-hotkeys-hook"
+import toast from 'react-hot-toast';
+import Loading from './Loading';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const ProjectEditor = ({
   onCodeChange,
   roomID,
@@ -25,6 +29,7 @@ const ProjectEditor = ({
   const [version, setVersion] = useState<string>('latest');
   const [output, setOutput] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaveLoading, setIsSaveLoading] = useState(false);
   const [consoleHeight, setConsoleHeight] = useState(200);
   const [isDragging, setIsDragging] = useState(false);
   const [Content, setContent] = useState<string>("");
@@ -33,7 +38,31 @@ const ProjectEditor = ({
     editorRef.current = editor;
   };
 
-  /** Fetch project data */
+
+  const saveCode = async () => {
+    if (!editorRef.current || !roomID) return;
+    const code = editorRef.current.getValue();
+
+    setIsSaveLoading(true);
+    try {
+      const res = await dbAction("update", { content: code }, roomID);
+      if (res) {
+        toast.success("saved successfully");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaveLoading(false);
+    }
+  }
+
+
+  useHotkeys('ctrl+s', (e:any) => {
+    e.preventDefault();
+    saveCode();
+
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       if (!roomID) return;
@@ -48,7 +77,7 @@ const ProjectEditor = ({
     fetchData();
   }, [roomID]);
 
-  // 🧩 Fetch runtime version
+  // Fetch runtime version
   const fetchVersion = async () => {
     try {
       const res = await fetch('https://emkc.org/api/v2/piston/runtimes');
@@ -62,7 +91,7 @@ const ProjectEditor = ({
     }
   };
 
-  // 🧩 Run Code
+  // Run Code
   const runCode = async () => {
     if (!editorRef.current) return;
     const code = editorRef.current.getValue();
@@ -92,7 +121,7 @@ const ProjectEditor = ({
     }
   };
 
-  // 🔹 Local code change → emit
+  // Local code change → emit
   useEffect(() => {
     if (!editorRef.current || !socketRef.current) return;
     const editor = editorRef.current;
@@ -107,7 +136,7 @@ const ProjectEditor = ({
     return () => sub.dispose();
   }, [socketRef.current, isRemoteChange]);
 
-  // 🔹 Remote code update listener
+  // Remote code update listener
   useEffect(() => {
     if (!socketRef.current) return;
     const socket = socketRef.current;
@@ -138,7 +167,7 @@ const ProjectEditor = ({
     };
     console.log("ClientList", ClientList);
     console.log("content", Content);
-    if(ClientList.length === 1 && Content){
+    if (ClientList.length === 1 && Content) {
       // First user to join, set the editor content
       if (editorRef.current) {
         editorRef.current.setValue(Content);
@@ -148,7 +177,7 @@ const ProjectEditor = ({
     return () => socket.off(ACTIONS.SYNC_CODE, handleSyncCode);
   }, [socketRef.current, Content]);
 
-  // 🔹 Console resize
+  // Console resize
   const startDrag = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -160,6 +189,7 @@ const ProjectEditor = ({
     const newHeight = containerRect.bottom - e.clientY;
     if (newHeight > 80 && newHeight < 500) setConsoleHeight(newHeight);
   };
+
 
   const stopDrag = () => setIsDragging(false);
 
@@ -177,7 +207,7 @@ const ProjectEditor = ({
       ref={containerRef}
       className="flex flex-col w-[80vw] h-[100vh] bg-[#0B0B0B] text-white relative"
     >
-      {/* 🔹 Top Toolbar */}
+      {/* Top Toolbar */}
       <div className="flex justify-between items-center px-4 py-2 bg-[#111111] border-b border-white/10 z-20">
 
         <div>
@@ -185,17 +215,27 @@ const ProjectEditor = ({
             language
           }
         </div>
-        <button
-          onClick={runCode}
-          disabled={isLoading}
-          className={`${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90'
-            } bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] text-white px-4 py-1.5 rounded-lg text-sm transition-all`}
-        >
-          {isLoading ? 'Running...' : '▶ Run'}
-        </button>
+        <div className='flex gap-8'>
+          <button
+            onClick={saveCode}
+            disabled={isSaveLoading}
+            className={`${isSaveLoading ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90'
+              } bg-gradient-to-r from-[#05f755] to-[#11ff60bb] text-white px-4 py-1.5 rounded-lg text-sm transition-all`}
+          >
+            {isSaveLoading ? 'Saving...' : 'Ctrl+S'}
+          </button>
+          <button
+            onClick={runCode}
+            disabled={isLoading}
+            className={`${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90'
+              } bg-gradient-to-r from-[#3B82F6] to-[#8a5cf6d2] text-white px-4 py-1.5 rounded-lg text-sm transition-all`}
+          >
+            {isLoading ? 'Running...' : '▶ Run'}
+          </button>
+        </div>
       </div>
 
-      {/* 🔹 Editor + Console */}
+      {/* Editor + Console */}
       <div className="relative flex-grow overflow-hidden">
         <MonacoEditor
           height={`calc(100% - ${consoleHeight}px)`}
@@ -204,6 +244,7 @@ const ProjectEditor = ({
           language={language == 'c++' ? 'cpp' : language}
           theme="vs-dark"
           onMount={handleEditorDidMount}
+          loading={<Loading/>}
           options={{
             minimap: { enabled: false },
             fontSize: 14,

@@ -10,7 +10,7 @@ import { initSocket } from '@/app/socket';
 import { Socket } from 'socket.io-client';
 import ACTIONS from '@/lib/action';
 import { useUser } from '@clerk/nextjs';
-import ProjectEditor from '@/components/MonacoEditor';
+import ProjectEditor from '@/components/ProjectEditor';
 
 interface ClientType {
   socketID: string;
