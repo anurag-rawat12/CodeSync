@@ -165,8 +165,6 @@ const ProjectEditor = ({
       const currentCode = editorRef.current.getValue();
       socket.emit(ACTIONS.SYNC_CODE, { socketID, code: currentCode });
     };
-    console.log("ClientList", ClientList);
-    console.log("content", Content);
     if (ClientList.length === 1 && Content) {
       // First user to join, set the editor content
       if (editorRef.current) {
@@ -175,7 +173,7 @@ const ProjectEditor = ({
     }
     socket.on(ACTIONS.SYNC_CODE, handleSyncCode);
     return () => socket.off(ACTIONS.SYNC_CODE, handleSyncCode);
-  }, [socketRef.current, Content]);
+  }, [socketRef.current, Content,ClientList]);
 
   // Console resize
   const startDrag = (e: React.MouseEvent) => {
