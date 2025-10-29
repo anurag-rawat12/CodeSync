@@ -1,7 +1,4 @@
 "use server";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 export async function getAppwriteEnv() {
   const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT!;
