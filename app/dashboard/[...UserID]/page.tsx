@@ -205,42 +205,54 @@ const Page = () => {
               </TableHeader>
               <TableBody>
                 {userproject
-                  .filter((p) => p.project_name.toLowerCase().includes(search.toLowerCase()))
+                  .filter((p) =>
+                    p.project_name.toLowerCase().includes(search.toLowerCase())
+                  )
                   .map((project) => (
-                    <TableRow key={project.$id}
-                      onClick={() => router.push(`/project/${project.$id}`)}
-                      className="border-[#3A3A38] cursor-pointer hover:bg-[#30302E]/50 transition">
-                      <TableCell
-                        className="font-medium "
-
-                      >
-                        {project.project_name}
+                    <TableRow
+                      key={project.$id}
+                      className="border-[#3A3A38] cursor-pointer hover:bg-[#30302E]/50 transition"
+                      onClick={() => router.push(`/dashboard/${project.$id}`)}
+                    >
+                      <TableCell className="font-medium">{project.project_name}</TableCell>
+                      <TableCell className="text-[#C7C7C4] text-sm capitalize">
+                        {project.language}
                       </TableCell>
-                      <TableCell className="text-[#C7C7C4] text-sm capitalize">{project.language}</TableCell>
                       <TableCell className="text-[#C7C7C4] text-sm">
-                        {new Date(project.created_at).toLocaleDateString('en-US', {
-                          month: 'short', day: 'numeric', year: 'numeric'
+                        {new Date(project.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
                         })}
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end items-center gap-2">
+                          {/* Add Collaborator Button */}
                           <Button
                             size="sm"
                             variant="ghost"
                             className="h-8 w-8 p-0 hover:bg-[#30302E] text-[#9A9A96] hover:text-white"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setSelectedProject(project);
                               setCollabModal(true);
                             }}
                           >
                             <UserPlus size={16} />
                           </Button>
-                          <Deletebtn projectId={project.$id} onclick={deleteHandler} />
+
+                          {/* Delete Button */}
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Deletebtn projectId={project.$id} onclick={deleteHandler} />
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
               </TableBody>
+
             </Table>
 
             {userproject.filter((p) => p.project_name.toLowerCase().includes(search.toLowerCase())).length === 0 && (

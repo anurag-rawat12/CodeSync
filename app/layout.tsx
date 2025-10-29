@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodeCollab — Real-Time Collaboration",
+  title: "CodeSync — Real-Time Collaboration",
   description: "Collaborate live with your team. Code, create, and build together seamlessly.",
 };
 
