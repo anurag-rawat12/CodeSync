@@ -212,7 +212,7 @@ const Page = () => {
                     <TableRow
                       key={project.$id}
                       className="border-[#3A3A38] cursor-pointer hover:bg-[#30302E]/50 transition"
-                      onClick={() => router.push(`/dashboard/${project.$id}`)}
+                      onClick={() => router.push(`/project/${project.$id}`)}
                     >
                       <TableCell className="font-medium">{project.project_name}</TableCell>
                       <TableCell className="text-[#C7C7C4] text-sm capitalize">
