@@ -80,4 +80,15 @@ server.listen(PORT, () => {
 
 app.get("/", (req, res) => {
   res.send("CodeSync Socket Server is running");
-});
+})
+
+app.get("keep-alive",(req,res) =>{
+  res.send("keep alive")
+})
+
+setInterval(() => {
+  const url = `https://codesync-85no.onrender.com/keep-alive`;
+  fetch(url)
+    .then(() => console.log("Keep-alive ping sent"))
+    .catch((err) => console.error("Keep-alive failed:", err.message));
+}, 5 * 60 * 1000); 
